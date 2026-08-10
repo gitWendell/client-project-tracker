@@ -1,36 +1,14 @@
 # Submission Guide
 
-## Deliverables
+All submissions must be completed through the [official application form](https://forms.gle/fwNQ8dKRGE6g5jJs5).
 
-Please submit the following:
+You will be required to provide:
 
-### 1. GitHub Repository
+- GitHub repository link of your solution
+- Setup and run instructions
+- Short technical reflection answers
 
-Provide a link to the repository containing your solution.
-
-### 2. README
-
-Your repository should include:
-
-* Setup instructions
-* Technology choices
-* How to run the application
-* Assumptions made
-
-### 3. Technical Reflection
-
-Please answer the following questions:
-
-1. Why did you choose this implementation approach?
-2. What tradeoffs did you make?
-3. What would you improve if given additional time?
-4. What was the most challenging part of this assessment?
-5. Did you use AI tools during development?
-
-  If yes:
-
-* Which tools?
-* How were they used?
+Make sure your repository is publicly accessible.
 
 ## Evaluation Rubric
 
