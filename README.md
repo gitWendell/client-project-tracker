@@ -31,6 +31,7 @@ That's it. `npm run setup` seeds the 12 projects from `test_data.json`, so the a
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript, no emit |
 | `npm run db:seed` | Re-seed the database from `test_data.json` |
+| `npm run db:reset` | Drop and rebuild the database from scratch, then re-seed |
 
 Re-running `npm run setup` at any point resets the data to a clean state.
 
@@ -49,7 +50,7 @@ Re-running `npm run setup` at any point resets the data to a clean state.
 
 - **Search** across client name, project name and description
 - **Filter** by status and by priority
-- **Sort** by due date, start date, priority, project or client name, or recently added
+- **Sort** by due date, start date, priority, status, project or client name, or recently added — from the toolbar, or by clicking any column header in the table
 - **Unit tests** — 50 tests covering validation, business rules and derived display logic
 
 Search, filtering and sorting share the same query pipeline, so they cost very little once the list endpoint accepts a validated query object. Tests were included because the rubric weights correctness and maintainability heavily.
@@ -143,10 +144,10 @@ Base path is `/api/projects`. The paths from the brief (`/projects`, `/projects/
 | `search` | Free text; matches client name, project name or description | — |
 | `status` | `Planning`, `In Progress`, `On Hold`, `Completed` | all |
 | `priority` | `Low`, `Medium`, `High` | all |
-| `sort` | `dueDate`, `startDate`, `priority`, `projectName`, `clientName`, `createdAt` | `dueDate` |
+| `sort` | `dueDate`, `startDate`, `priority`, `status`, `projectName`, `clientName`, `createdAt` | `dueDate` |
 | `order` | `asc`, `desc` | `asc` |
 
-Unknown sort fields are rejected rather than ignored, so a typo surfaces as an error instead of silently changing the order. Sorting by `priority` orders by severity — High, Medium, Low — not alphabetically.
+Unknown sort fields are rejected rather than ignored, so a typo surfaces as an error instead of silently changing the order. Sorting by `priority` orders by severity — High, Medium, Low — and by `status` along the project lifecycle — Planning, In Progress, On Hold, Completed. Neither sorts alphabetically, which for both would be meaningless.
 
 ### Response envelope
 
@@ -257,7 +258,9 @@ The brief leaves some things open. Where it did, I chose deliberately rather tha
 
 **Dates are calendar dates, not instants.** A due date of 1 June is 1 June in every timezone. Values are normalised to UTC midnight on the way in and rendered as `YYYY-MM-DD` on the way out, so nothing shifts by a day depending on where the server runs. Display formatting is done by hand rather than through `Intl`, whose month abbreviations vary by locale and ICU version — "Sept" next to "Jul" in the same column reads as a bug.
 
-**Priority has a derived sort key.** Ordering by the priority string alphabetically gives High, Low, Medium, which looks broken. The database stores a `priorityRank` (1/2/3) maintained by the repository, so the sort happens in the database and is correct.
+**Priority and status have derived sort keys.** Ordering by the priority string alphabetically gives High, Low, Medium; status gives Completed, In Progress, On Hold, Planning. Both look broken. The database stores a `priorityRank` and a `statusRank`, maintained by the repository on every write, so the sort happens in the database and reflects real severity and lifecycle position.
+
+**Sorting is driven from two controls that share one piece of state.** Column headers and the toolbar dropdown both call the same reducer in [`src/lib/project-sorting.ts`](src/lib/project-sorting.ts), so they can never disagree — change the sort from either and the other updates. Each column also has a natural opening direction: clicking Priority shows High first, while clicking a date column starts with the earliest. Headers carry `aria-sort` and are real buttons, so the ordering is announced to screen readers and operable from the keyboard, not just clickable.
 
 **PUT is a full replacement.** A partial body is rejected rather than merged, which is what PUT means. A `PATCH` endpoint would be the right way to add partial updates.
 

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { formatDisplayDate } from '@/lib/dates';
 import { getDueStatus, type DueTone } from '@/lib/project-insights';
 import type { Project } from '@/lib/types';
+import type { ProjectSortField } from '@/lib/validation/project';
 
 const DUE_TONE_STYLES: Record<DueTone, string> = {
   overdue: 'text-red-600 dark:text-red-400 font-medium',
@@ -18,6 +19,9 @@ interface ProjectListProps {
   isLoading: boolean;
   error: string | null;
   hasFilters: boolean;
+  sort: ProjectSortField;
+  order: 'asc' | 'desc';
+  onSort: (field: ProjectSortField) => void;
   onRetry: () => void;
   onResetFilters: () => void;
   onCreate: () => void;
@@ -36,6 +40,9 @@ export function ProjectList({
   isLoading,
   error,
   hasFilters,
+  sort,
+  order,
+  onSort,
   onRetry,
   onResetFilters,
   onCreate,
@@ -102,7 +109,14 @@ export function ProjectList({
     // flashes empty between filter changes.
     <div className={isLoading ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
       <Panel className="hidden md:block">
-        <ProjectTable projects={projects} onEdit={onEdit} onDelete={onDelete} />
+        <ProjectTable
+          projects={projects}
+          sort={sort}
+          order={order}
+          onSort={onSort}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       </Panel>
       <div className="flex flex-col gap-3 md:hidden">
         {projects.map((project) => (
@@ -122,27 +136,41 @@ function Panel({ children, className = '' }: { children: React.ReactNode; classN
 }
 
 type RowActions = Pick<ProjectListProps, 'onEdit' | 'onDelete'>;
+type SortControls = Pick<ProjectListProps, 'sort' | 'order' | 'onSort'>;
 
-function ProjectTable({ projects, onEdit, onDelete }: { projects: Project[] } & RowActions) {
+/** The column header each sortable column maps to. */
+const COLUMNS: { label: string; field: ProjectSortField }[] = [
+  { label: 'Project', field: 'projectName' },
+  { label: 'Client', field: 'clientName' },
+  { label: 'Status', field: 'status' },
+  { label: 'Priority', field: 'priority' },
+  // The Timeline column shows both dates; the due date is the one worth
+  // ordering by, since that is the deadline a manager is tracking.
+  { label: 'Timeline', field: 'dueDate' },
+];
+
+function ProjectTable({
+  projects,
+  sort,
+  order,
+  onSort,
+  onEdit,
+  onDelete,
+}: { projects: Project[] } & RowActions & SortControls) {
   return (
     <table className="w-full text-left text-sm">
       <thead className="border-b border-border-subtle bg-surface-muted text-xs uppercase tracking-wide text-muted">
         <tr>
-          <th scope="col" className="px-5 py-3 font-medium">
-            Project
-          </th>
-          <th scope="col" className="px-5 py-3 font-medium">
-            Client
-          </th>
-          <th scope="col" className="px-5 py-3 font-medium">
-            Status
-          </th>
-          <th scope="col" className="px-5 py-3 font-medium">
-            Priority
-          </th>
-          <th scope="col" className="px-5 py-3 font-medium">
-            Timeline
-          </th>
+          {COLUMNS.map((column) => (
+            <SortableHeader
+              key={column.field}
+              label={column.label}
+              field={column.field}
+              sort={sort}
+              order={order}
+              onSort={onSort}
+            />
+          ))}
           <th scope="col" className="px-5 py-3 text-right font-medium">
             <span className="sr-only">Actions</span>
           </th>
@@ -182,6 +210,51 @@ function ProjectTable({ projects, onEdit, onDelete }: { projects: Project[] } & 
         })}
       </tbody>
     </table>
+  );
+}
+
+/**
+ * A clickable column header.
+ *
+ * `aria-sort` on the `th` is what tells assistive technology which column the
+ * table is ordered by and in which direction — the arrow alone is invisible to
+ * a screen reader. The control is a real button so it is keyboard operable.
+ */
+function SortableHeader({
+  label,
+  field,
+  sort,
+  order,
+  onSort,
+}: { label: string; field: ProjectSortField } & SortControls) {
+  const isActive = sort === field;
+  const direction = order === 'asc' ? 'ascending' : 'descending';
+
+  return (
+    <th
+      scope="col"
+      aria-sort={isActive ? direction : 'none'}
+      className="px-5 py-3 font-medium"
+    >
+      <button
+        type="button"
+        onClick={() => onSort(field)}
+        title={`Sort by ${label.toLowerCase()}`}
+        className={`group inline-flex items-center gap-1 uppercase tracking-wide transition-colors hover:text-foreground ${
+          isActive ? 'text-foreground' : ''
+        }`}
+      >
+        {label}
+        <span
+          aria-hidden="true"
+          className={`text-[0.7rem] transition-opacity ${
+            isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'
+          }`}
+        >
+          {isActive && order === 'desc' ? '↓' : '↑'}
+        </span>
+      </button>
+    </th>
   );
 }
 

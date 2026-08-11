@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { controlClassName } from '@/components/ui/form-field';
+import { SORT_LABELS } from '@/lib/project-sorting';
 import {
   PROJECT_PRIORITIES,
   PROJECT_STATUSES,
@@ -24,15 +25,6 @@ export const DEFAULT_TOOLBAR_STATE: ToolbarState = {
   priority: '',
   sort: 'dueDate',
   order: 'asc',
-};
-
-const SORT_LABELS: Record<ProjectSortField, string> = {
-  dueDate: 'Due date',
-  startDate: 'Start date',
-  priority: 'Priority',
-  projectName: 'Project name',
-  clientName: 'Client name',
-  createdAt: 'Recently added',
 };
 
 interface ProjectToolbarProps {

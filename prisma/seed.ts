@@ -10,7 +10,7 @@ import path from 'node:path';
 import { PrismaClient } from '@prisma/client';
 
 import { parseIsoDate } from '@/lib/dates';
-import { priorityRankOf, projectInputSchema } from '@/lib/validation/project';
+import { priorityRankOf, projectInputSchema, statusRankOf } from '@/lib/validation/project';
 
 const prisma = new PrismaClient();
 
@@ -41,6 +41,7 @@ async function main() {
       startDate: parseIsoDate(parsed.data.startDate)!,
       dueDate: parseIsoDate(parsed.data.dueDate)!,
       priorityRank: priorityRankOf(parsed.data.priority),
+      statusRank: statusRankOf(parsed.data.status),
     };
   });
 

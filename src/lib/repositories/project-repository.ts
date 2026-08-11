@@ -13,6 +13,7 @@ import { parseIsoDate, toIsoDate } from '@/lib/dates';
 import type { Project } from '@/lib/types';
 import {
   priorityRankOf,
+  statusRankOf,
   type ProjectInput,
   type ProjectPriority,
   type ProjectQuery,
@@ -68,8 +69,15 @@ function toRow(input: ProjectInput) {
     startDate: parseIsoDate(input.startDate)!,
     dueDate: parseIsoDate(input.dueDate)!,
     priorityRank: priorityRankOf(input.priority),
+    statusRank: statusRankOf(input.status),
   };
 }
+
+/** Sort fields whose column in the database is a derived rank, not the value. */
+const RANKED_SORT_COLUMNS: Partial<Record<ProjectQuery['sort'], string>> = {
+  priority: 'priorityRank',
+  status: 'statusRank',
+};
 
 function buildWhere(query: ProjectQuery): Prisma.ProjectWhereInput {
   const where: Prisma.ProjectWhereInput = {};
@@ -92,12 +100,12 @@ function buildWhere(query: ProjectQuery): Prisma.ProjectWhereInput {
 
 function buildOrderBy(query: ProjectQuery): Prisma.ProjectOrderByWithRelationInput[] {
   const { sort, order } = query;
-  // 'priority' is ordered by the derived rank so High > Medium > Low rather
-  // than alphabetically. `id` is the tiebreaker that keeps paging stable.
-  const primary: Prisma.ProjectOrderByWithRelationInput =
-    sort === 'priority' ? { priorityRank: order } : { [sort]: order };
+  // Priority and status are ordered by their derived ranks so that High beats
+  // Medium and Planning precedes Completed, rather than sorting the words.
+  // `id` is the tiebreaker that keeps the order stable between requests.
+  const column = RANKED_SORT_COLUMNS[sort] ?? sort;
 
-  return [primary, { id: 'asc' }];
+  return [{ [column]: order }, { id: 'asc' }];
 }
 
 export class PrismaProjectRepository implements ProjectRepository {

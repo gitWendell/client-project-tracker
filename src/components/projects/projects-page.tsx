@@ -15,8 +15,9 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useProjects } from '@/hooks/use-projects';
 import { projectsApi } from '@/lib/api-client';
 import { summarise } from '@/lib/project-insights';
+import { nextSortState } from '@/lib/project-sorting';
 import type { Project } from '@/lib/types';
-import type { ProjectFormValues } from '@/lib/validation/project';
+import type { ProjectFormValues, ProjectSortField } from '@/lib/validation/project';
 
 /**
  * The one stateful screen in the app: it owns the filters and which dialog is
@@ -50,6 +51,15 @@ export function ProjectsPage() {
 
   const hasFilters =
     toolbar.search !== '' || toolbar.status !== '' || toolbar.priority !== '';
+
+  /**
+   * Shared by the toolbar dropdown and the table headers, so the two controls
+   * can never show different things: clicking the active column flips the
+   * direction, clicking another switches to it.
+   */
+  const handleSort = (field: ProjectSortField) => {
+    setToolbar((current) => ({ ...current, ...nextSortState(current, field) }));
+  };
 
   const openCreate = () => {
     setEditing(null);
@@ -122,6 +132,9 @@ export function ProjectsPage() {
         isLoading={isLoading}
         error={error}
         hasFilters={hasFilters}
+        sort={toolbar.sort}
+        order={toolbar.order}
+        onSort={handleSort}
         onRetry={refresh}
         onResetFilters={() => setToolbar(DEFAULT_TOOLBAR_STATE)}
         onCreate={openCreate}

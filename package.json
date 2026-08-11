@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
-    "setup": "prisma db push && prisma db seed"
+    "setup": "prisma db push && prisma db seed",
+    "db:reset": "prisma db push --force-reset && prisma db seed"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",

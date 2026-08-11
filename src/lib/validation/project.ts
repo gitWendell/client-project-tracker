@@ -20,8 +20,23 @@ export type ProjectPriority = (typeof PROJECT_PRIORITIES)[number];
 /** Severity order used for sorting; see `priorityRank` in the Prisma schema. */
 const PRIORITY_RANK: Record<ProjectPriority, number> = { Low: 1, Medium: 2, High: 3 };
 
+/**
+ * Lifecycle order, so sorting by status walks a project from not-yet-started
+ * to finished rather than through the alphabet.
+ */
+const STATUS_RANK: Record<ProjectStatus, number> = {
+  Planning: 1,
+  'In Progress': 2,
+  'On Hold': 3,
+  Completed: 4,
+};
+
 export function priorityRankOf(priority: ProjectPriority): number {
   return PRIORITY_RANK[priority];
+}
+
+export function statusRankOf(status: ProjectStatus): number {
+  return STATUS_RANK[status];
 }
 
 /** Builds an enum schema whose error message lists the accepted values. */
@@ -108,6 +123,7 @@ export const PROJECT_SORT_FIELDS = [
   'dueDate',
   'startDate',
   'priority',
+  'status',
   'projectName',
   'clientName',
   'createdAt',

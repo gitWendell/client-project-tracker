@@ -27,9 +27,17 @@ model Project {
   startDate DateTime
   dueDate   DateTime
 
-  // Derived sort key. Ordering by `priority` alphabetically would give
-  // High, Low, Medium; this lets the database sort by real severity.
-  priorityRank Int
+  // Derived sort keys. Ordering by these columns alphabetically would give
+  // High, Low, Medium and Completed, In Progress, On Hold, Planning — both
+  // meaningless. The ranks let the database sort by severity and by where the
+  // project sits in its lifecycle.
+  //
+  // The `0` default is a sentinel no real row keeps: the repository sets both
+  // ranks on every write. It exists so the column can be added to a database
+  // that already has rows — without it, `prisma db push` refuses to add a
+  // required column to a non-empty table.
+  priorityRank Int @default(0)
+  statusRank   Int @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

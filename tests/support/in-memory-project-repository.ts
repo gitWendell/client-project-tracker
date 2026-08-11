@@ -7,7 +7,12 @@
  */
 import type { ProjectRepository } from '@/lib/repositories/project-repository';
 import type { Project } from '@/lib/types';
-import { priorityRankOf, type ProjectInput, type ProjectQuery } from '@/lib/validation/project';
+import {
+  priorityRankOf,
+  statusRankOf,
+  type ProjectInput,
+  type ProjectQuery,
+} from '@/lib/validation/project';
 
 export class InMemoryProjectRepository implements ProjectRepository {
   private projects: Project[] = [];
@@ -33,10 +38,13 @@ export class InMemoryProjectRepository implements ProjectRepository {
     const direction = query.order === 'desc' ? -1 : 1;
 
     return matches.sort((a, b) => {
+      // Mirrors the derived rank columns the real repository sorts on.
       const [left, right] =
         query.sort === 'priority'
           ? [priorityRankOf(a.priority), priorityRankOf(b.priority)]
-          : [a[query.sort], b[query.sort]];
+          : query.sort === 'status'
+            ? [statusRankOf(a.status), statusRankOf(b.status)]
+            : [a[query.sort], b[query.sort]];
 
       if (left < right) return -1 * direction;
       if (left > right) return 1 * direction;

@@ -133,6 +133,16 @@ describe('listing projects', () => {
     expect(projects.map((project) => project.priority)).toEqual(['High', 'Medium', 'Low']);
   });
 
+  it('sorts status by lifecycle position, not alphabetically', async () => {
+    const projects = await service.list({ sort: 'status', order: 'asc' });
+    // Alphabetical order would put "On Hold" before "Planning".
+    expect(projects.map((project) => project.status)).toEqual([
+      'Planning',
+      'In Progress',
+      'On Hold',
+    ]);
+  });
+
   it('rejects an unsupported sort field instead of ignoring it', async () => {
     await expect(service.list({ sort: 'secretColumn' })).rejects.toBeInstanceOf(ValidationError);
   });
