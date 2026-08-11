@@ -1,0 +1,40 @@
+// SQLite is used so the project runs with zero external setup.
+// Swapping to PostgreSQL/MySQL means changing `provider` + `DATABASE_URL`;
+// no application code depends on the engine (see src/lib/repositories).
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  clientName  String
+  projectName String
+  description String   @default("")
+
+  // Stored as strings rather than native enums: SQLite has no enum type.
+  // The allowed values live in one place (src/lib/validation/project.ts) and
+  // are enforced before anything reaches the database.
+  status   String
+  priority String
+
+  // Date-only values, persisted at UTC midnight so they never shift timezone.
+  startDate DateTime
+  dueDate   DateTime
+
+  // Derived sort key. Ordering by `priority` alphabetically would give
+  // High, Low, Medium; this lets the database sort by real severity.
+  priorityRank Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+}
