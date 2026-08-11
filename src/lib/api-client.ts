@@ -24,10 +24,6 @@ export class ApiError extends Error {
   }
 }
 
-/** True when the request never reached the server. */
-export const isNetworkError = (error: unknown) =>
-  error instanceof ApiError && error.code === 'NETWORK_ERROR';
-
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   let response: Response;
 
@@ -76,11 +72,14 @@ function toSearchParams(query: Partial<ProjectQuery>): string {
   return queryString ? `?${queryString}` : '';
 }
 
+/**
+ * Only the operations the UI actually performs are defined here. The API also
+ * serves `GET /api/projects/:id`, but the list response already carries every
+ * field the screen needs, so adding a client method for it would be dead code.
+ */
 export const projectsApi = {
   list: (query: Partial<ProjectQuery> = {}, signal?: AbortSignal) =>
     request<Project[]>(`/api/projects${toSearchParams(query)}`, { signal }),
-
-  get: (id: number) => request<Project>(`/api/projects/${id}`),
 
   create: (input: ProjectInput) =>
     request<Project>('/api/projects', { method: 'POST', body: JSON.stringify(input) }),

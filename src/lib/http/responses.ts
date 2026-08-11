@@ -8,7 +8,7 @@
 import { NextResponse } from 'next/server';
 import { ZodError } from 'zod';
 
-import { AppError, ValidationError, type FieldErrors } from '@/lib/http/errors';
+import { AppError, BadRequestError, ValidationError, type FieldErrors } from '@/lib/http/errors';
 import type { ApiFailure, ApiSuccess } from '@/lib/types';
 
 export { toFieldErrors } from '@/lib/http/errors';
@@ -84,6 +84,6 @@ export async function readJsonBody(request: Request): Promise<unknown> {
   try {
     return await request.json();
   } catch {
-    throw new AppError('Request body must be valid JSON.', 400, 'BAD_REQUEST');
+    throw new BadRequestError('Request body must be valid JSON.');
   }
 }

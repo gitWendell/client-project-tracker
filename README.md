@@ -8,7 +8,7 @@ Built for the Full Stack Developer Technical Assessment. The original brief is p
 
 ---
 
-## Quick start
+## Setup instructions
 
 Requires **Node.js 20 or newer** (developed on 22.20). No database server to install — the app uses SQLite.
 
@@ -36,7 +36,7 @@ Re-running `npm run setup` at any point resets the data to a clean state.
 
 ---
 
-## What's included
+## Features implemented
 
 **Required**
 
@@ -225,6 +225,29 @@ One deliberate nuance: the cross-field date rule only runs once the individual f
 ![Validation](docs/screenshots/form-validation.png)
 
 ---
+
+## Assumptions made
+
+The brief leaves some things open. Where it did, I chose deliberately rather than guessing silently — each of these would be a question for the product owner on a real project.
+
+**Scope**
+
+- **Single-user, no authentication.** There are no accounts, so anyone who opens the app sees and edits every project. I assumed an internal agency tool sitting behind an existing network or SSO boundary. Multi-tenancy would change the data model, so it is called out rather than half-built.
+- **`REQUIREMENTS.md` outranks the brief.** It carries the data model, endpoints and validation rules, so where it and `docs/ASSESSMENT.md` disagree, I followed it. See [the closing note](#a-note-on-the-brief).
+- **`test_data.json` is the intended seed data**, and its integer ids are worth preserving so documented examples such as `GET /api/projects/1` match what is actually in the database.
+
+**Data model**
+
+- **Status and Priority are fixed sets**, defined by the brief rather than editable by users. Making them configurable would mean two more tables and a management screen.
+- **All fields except Description are required.** The brief only names Client Name and Project Name explicitly, but a project tracker with a missing status, priority or due date cannot do its job — so those are required too. Description is genuinely optional and defaults to an empty string.
+- **Dates are calendar dates, not timestamps.** No time of day, and no per-user timezone: 1 June is 1 June wherever you open the app.
+- **A due date in the past is allowed.** Only *due before start* is rejected. Forbidding past dates would make it impossible to enter a project that is already running or overdue — which is exactly the situation a tracker exists to surface.
+
+**Behaviour**
+
+- **Delete is permanent.** No soft delete or archive, so the confirmation dialog is the only safety net. A production tool would almost certainly archive instead, to keep history for reporting.
+- **The dataset is small.** An agency tracks tens or hundreds of projects, so the list endpoint returns everything and pagination is deferred rather than built.
+- **`PUT` replaces the whole resource**, since the brief specifies `PUT` and not `PATCH`. A partial body is rejected rather than merged.
 
 ## Notable decisions
 
